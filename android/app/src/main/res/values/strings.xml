@@ -5,8 +5,8 @@
 <!--    facebook login    -->
     <string name="app_name">Addrus</string>
 
-    <string name="facebook_app_id">823299388577868</string>
-    <string name="fb_login_protocol_scheme">fb823299388577868</string>
+    <string name="facebook_app_id">141641607954244</string>
+    <string name="fb_login_protocol_scheme">fb141641607954244</string>
 
     <string name="google_api_key_android">112584408123-gnm889jcemf4qlmrqhh6lm5hbalsft4i.apps.googleusercontent.com</string>
     <string name="google_api_key_ios">112584408123-g0n2aoapedpkimd776u5r0cgi8mdr9ni.apps.googleusercontent.com</string>
