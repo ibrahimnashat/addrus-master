@@ -1,3 +1,4 @@
+import 'package:adrus/utils/helpers/app_fonts.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -22,7 +23,7 @@ class MText extends StatelessWidget {
       this.margin,
       this.isBold = false,
       this.size = 12,
-      this.fontFamily = "VarelaRound",
+      this.fontFamily = AppFronts.Bahij,
       this.isUpper = false,
       this.isMedium = false,
       this.maxWidth,

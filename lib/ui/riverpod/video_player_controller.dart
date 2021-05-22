@@ -7,22 +7,17 @@ class VideoPLayerController extends ChangeNotifier {
   FijkPlayer _player = FijkPlayer();
   FijkPlayer video = FijkPlayer();
   FijkPlayer get controller => _player;
-  bool firstTimePlay = false;
-  VideoPLayerController(url) {
+
+  void play(url) async {
     _player.setDataSource(
       url,
       autoPlay: true,
     );
-    _player.addListener(() async {
-      if (_player.isPlayable() && !firstTimePlay) {
-        await _player.pause();
-        firstTimePlay = true;
-      }
-      if (_player.isPlayable()) await video.pause();
-    });
+
     video.addListener(() async {
       if (video.isPlayable()) await _player.pause();
     });
+    await _player.pause();
   }
 
   bool get showPopUp => !_hide;

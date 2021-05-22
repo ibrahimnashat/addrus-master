@@ -19,6 +19,7 @@ import 'package:adrus/utils/size_config.dart';
 import 'package:adrus/widgets/components.dart';
 import 'package:adrus/widgets/my_error.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_offline/flutter_offline.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 import 'package:adrus/main.dart';
@@ -70,81 +71,94 @@ class _ScreenState extends State<HomeBlock> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: widget.color,
-      child: Column(
-          // shrinkWrap: true,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 1 * SizeConfig.heightMultiplier,
-                  horizontal: 1.5 * SizeConfig.heightMultiplier),
-              onTap: () {
-                Navigator.of(context)
-                    .push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => CoursesScreen(
-                      blockType: widget.blockType,
-                      title: widget.title,
-                      icon: widget.icon,
-                      returnedBack: () {
-                        setState(() {});
-                      },
+    return OfflineBuilder(
+        builder: (context) => SizedBox(),
+        connectivityBuilder: (BuildContext context,
+            ConnectivityResult connectivity, Widget child) {
+          final bool connected = connectivity != ConnectivityResult.none;
+
+          return Container(
+            color: widget.color,
+            child: Column(
+                // shrinkWrap: true,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.symmetric(
+                        vertical: 1 * SizeConfig.heightMultiplier,
+                        horizontal: 1.5 * SizeConfig.heightMultiplier),
+                    onTap: () {
+                      if (connected) {
+                        Navigator.of(context)
+                            .push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => CoursesScreen(
+                              blockType: widget.blockType,
+                              title: widget.title,
+                              icon: widget.icon,
+                              returnedBack: () {
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        )
+                            .then((value) {
+                          print("home block back 2");
+
+                          widget.returnedBack();
+                        });
+                      } else {
+                        components.displayDialog(
+                            context, "", "برجاء الاتصال بالانترنت");
+                      }
+                    },
+                    trailing: Image.asset(
+                      widget.icon,
+                      color: Colors.white,
+                      width: 4 * SizeConfig.heightMultiplier,
+                      height: 4 * SizeConfig.heightMultiplier,
+                    ),
+                    title: Text(
+                      widget.title ?? "",
+                      textAlign: TextAlign.right,
+                      style: AppTextStyles.textStyle(
+                          16, Colors.white, FontWeight.bold),
+                    ),
+                    leading: Container(
+                      decoration:
+                          AppStyles.decorationBottomBorder(Colors.white, 1),
+                      child: Text(
+                        "رؤية الكل",
+                        style: AppTextStyles.textStyle(
+                            14, Colors.white, FontWeight.w500),
+                      ),
                     ),
                   ),
-                )
-                    .then((value) {
-                  print("home block back 2");
-
-                  widget.returnedBack();
-                });
-              },
-              trailing: Image.asset(
-                widget.icon,
-                color: Colors.white,
-                width: 4 * SizeConfig.heightMultiplier,
-                height: 4 * SizeConfig.heightMultiplier,
-              ),
-              title: Text(
-                widget.title ?? "",
-                textAlign: TextAlign.right,
-                style:
-                    AppTextStyles.textStyle(16, Colors.white, FontWeight.bold),
-              ),
-              leading: Container(
-                decoration: AppStyles.decorationBottomBorder(Colors.white, 1),
-                child: Text(
-                  "رؤية الكل",
-                  style: AppTextStyles.textStyle(
-                      14, Colors.white, FontWeight.w500),
-                ),
-              ),
-            ),
-            (myCoursesList.length > 0 &&
-                    widget.blockType == AppConstants.MY_COURSES)
-                ? ShowMoreItems()
-                : Center(),
-            (widget.blockType == AppConstants.MY_COURSES)
-                ? (myCoursesList.isNotEmpty)
-                    ? HorizontalVideoList(
-                        data:
-                            myCoursesList, //tempList, //result.getSuccessData().data,
-                        blockType: widget.blockType,
-                        returnedBack: () {
-                          print("home block back 1");
-                          setState(() {});
-                          _myCoursesBloc.getMyCourses();
-                        },
-                      )
-                    : MyError("لا يوجد كورسات", Colors.white)
-                : DownloadedCourses(
-                    listType: AppConstants.HORIZONTAL,
-                    blockType: widget.blockType,
-                    title: widget.title,
-                    icon: widget.icon,
-                  ),
-          ]),
-    );
+                  (myCoursesList.length > 0 &&
+                          widget.blockType == AppConstants.MY_COURSES)
+                      ? ShowMoreItems()
+                      : Center(),
+                  (widget.blockType == AppConstants.MY_COURSES)
+                      ? (myCoursesList.isNotEmpty)
+                          ? HorizontalVideoList(
+                              data:
+                                  myCoursesList, //tempList, //result.getSuccessData().data,
+                              blockType: widget.blockType,
+                              returnedBack: () {
+                                print("home block back 1");
+                                setState(() {});
+                                _myCoursesBloc.getMyCourses();
+                              },
+                            )
+                          : MyError("لا يوجد كورسات", Colors.white)
+                      : DownloadedCourses(
+                          listType: AppConstants.HORIZONTAL,
+                          blockType: widget.blockType,
+                          title: widget.title,
+                          icon: widget.icon,
+                        ),
+                ]),
+          );
+        });
   }
 
   //--------

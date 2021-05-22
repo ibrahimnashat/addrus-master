@@ -27,6 +27,7 @@ import 'package:adrus/utils/size_config.dart';
 import 'package:adrus/widgets/components.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_offline/flutter_offline.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_share/flutter_share.dart';
@@ -84,8 +85,8 @@ class ScreenState extends State<CoursePreviewScreen> {
     super.initState();
     print("Course overview_url: ${courseData.overview_url}");
     print("Course classes: ${courseData.classes}");
-    videoPlayerController = AutoDisposeChangeNotifierProvider(
-        (ref) => VideoPLayerController(widget.courseData.overview_url));
+    videoPlayerController =
+        AutoDisposeChangeNotifierProvider((ref) => VideoPLayerController());
   }
 
   AutoDisposeChangeNotifierProvider<VideoPLayerController>
@@ -106,6 +107,7 @@ class ScreenState extends State<CoursePreviewScreen> {
         chooserTitle: "تطبيق أٌدرس");
   }
 
+  bool show = false;
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
@@ -130,299 +132,367 @@ class ScreenState extends State<CoursePreviewScreen> {
             ),
           ),
         ),
-        body: Stack(
-          children: [
-            Builder(
-                builder: (scaffoldContext) => Container(
-                      color: AppColors.BLUE_MED,
-                      margin: AppStyles.paddingSymmetric(0, 0),
-                      padding: EdgeInsets.zero,
-                      child: ListView(padding: EdgeInsets.all(0.0), children: <
-                          Widget>[
-                        (widget.blockType == AppConstants.MY_COURSES)
-                            ? PlayerItem(
-                                controller: controller.controller,
-                              )
-                            : OfflineVideoWidget(
-                                isPromo: true,
-                                videoId: "${widget.courseData.id}",
-                                videoUrl: widget.courseData.overview_url,
-                                blockType: widget.blockType,
-                                videoDeleted: () {
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          CoursePreviewScreen(
-                                        courseData: widget.courseData,
-                                        blockType: widget.blockType,
-                                      ),
+        body: OfflineBuilder(
+            builder: (context) => SizedBox(),
+            connectivityBuilder: (BuildContext context,
+                ConnectivityResult connectivity, Widget child) {
+              final bool connected = connectivity != ConnectivityResult.none;
+              if (!connected && widget.blockType == AppConstants.MY_COURSES)
+                return Center(
+                  child: Text(
+                    "برجاء الاتصال بالانترنت",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                );
+              return Stack(
+                children: [
+                  Builder(
+                      builder: (scaffoldContext) => Container(
+                            color: AppColors.BLUE_MED,
+                            margin: AppStyles.paddingSymmetric(0, 0),
+                            padding: EdgeInsets.zero,
+                            child: ListView(
+                                padding: EdgeInsets.all(0.0),
+                                children: <Widget>[
+                                  (widget.blockType == AppConstants.MY_COURSES)
+                                      ? show
+                                          ? PlayerItem(
+                                              controller: controller.controller,
+                                            )
+                                          : Container(
+                                              color: Colors.black,
+                                              child: OnlineCourseItem(
+                                                hideTitle: true,
+                                                videoUrl: widget
+                                                    .courseData.overview_url,
+                                                onTap: (url) async {
+                                                  setState(() {
+                                                    show = true;
+                                                  });
+                                                  controller.play(widget
+                                                      .courseData.overview_url);
+                                                },
+                                              ),
+                                            )
+                                      : OfflineVideoWidget(
+                                          isPromo: true,
+                                          videoId: "${widget.courseData.id}",
+                                          videoUrl:
+                                              widget.courseData.overview_url,
+                                          blockType: widget.blockType,
+                                          videoDeleted: () {
+                                            Navigator.of(context)
+                                                .pushReplacement(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (BuildContext context) =>
+                                                        CoursePreviewScreen(
+                                                  courseData: widget.courseData,
+                                                  blockType: widget.blockType,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    tileColor: AppColors.BLUE_DARK,
+                                    title: Text(
+                                      this.courseData.title ?? "",
+                                      textAlign: TextAlign.right,
+                                      style: AppTextStyles.textStyle(
+                                          18, Colors.white, FontWeight.w800),
                                     ),
-                                  );
-                                },
-                              ),
-                        ListTile(
-                          contentPadding: padding,
-                          tileColor: AppColors.BLUE_DARK,
-                          title: Text(
-                            this.courseData.title ?? "",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                18, Colors.white, FontWeight.w800),
-                          ),
-                          subtitle: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "${this.courseData.instructor.name ?? ""}",
-                                  textAlign: TextAlign.right,
-                                  style: AppTextStyles.textStyle(
-                                      14, Colors.white, FontWeight.w600),
-                                ),
-                                SizedBox(
-                                  width: 2 * SizeConfig.widthMultiplier,
-                                ),
-                                Text(
-                                  ": بواسطة",
-                                  textAlign: TextAlign.right,
-                                  style: AppTextStyles.textStyle(
-                                      14, Colors.white, FontWeight.w600),
-                                ),
-                              ]),
-                        ),
-                        (widget.blockType == AppConstants.MY_COURSES)
-                            ? ListTile(
-                                tileColor: Colors.white,
-                                title: InkWell(
-                                  onTap: () {
-                                    if (widget.courseData.overview_url
-                                        .contains("www.youtube.com")) {
-                                      components.displayDialog(context, "",
-                                          "لا يمكن تحميل هذا الفيديو");
-                                    } else {
-                                      if (!download.downloading) {
-                                        setState(() {
-                                          widget.courseData.videoDownloaded =
-                                              true;
-                                        });
-                                        handleVideoDownload(
-                                            widget.courseData.id.toString(),
-                                            widget.courseData.overview_url ??
-                                                "");
-                                      } else {
-                                        components.displayToast(
-                                            context, "انتظر من فضلك");
-                                      }
-                                    }
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        "تحميل الفيديو البرومو",
-                                        textAlign: TextAlign.right,
-                                        style: AppTextStyles.textStyle(
-                                            15,
-                                            AppColors.YELLOW_DARK,
-                                            FontWeight.w700,
-                                            null,
-                                            2),
-                                      ),
-                                      SizedBox(
-                                        width: 1 * SizeConfig.widthMultiplier,
-                                      ),
-                                      Icon(
-                                        Icons.download_rounded,
-                                        color: AppColors.YELLOW_DARK,
-                                      ),
-                                    ],
+                                    subtitle: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            "${this.courseData.instructor.name ?? ""}",
+                                            textAlign: TextAlign.right,
+                                            style: AppTextStyles.textStyle(14,
+                                                Colors.white, FontWeight.w600),
+                                          ),
+                                          SizedBox(
+                                            width:
+                                                2 * SizeConfig.widthMultiplier,
+                                          ),
+                                          Text(
+                                            ": بواسطة",
+                                            textAlign: TextAlign.right,
+                                            style: AppTextStyles.textStyle(14,
+                                                Colors.white, FontWeight.w600),
+                                          ),
+                                        ]),
                                   ),
-                                ),
-                              )
-                            : Center(),
-                        ListTile(
-                          contentPadding: padding,
-                          tileColor: AppColors.BLUE_DARK,
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      "${this.courseData.total_enroll ?? ""}",
+                                  (widget.blockType == AppConstants.MY_COURSES)
+                                      ? ListTile(
+                                          tileColor: Colors.white,
+                                          title: InkWell(
+                                            onTap: () {
+                                              if (widget.courseData.overview_url
+                                                  .contains(
+                                                      "www.youtube.com")) {
+                                                components.displayDialog(
+                                                    context,
+                                                    "",
+                                                    "لا يمكن تحميل هذا الفيديو");
+                                              } else {
+                                                if (!download.downloading) {
+                                                  setState(() {
+                                                    widget.courseData
+                                                        .videoDownloaded = true;
+                                                  });
+                                                  handleVideoDownload(
+                                                      widget.courseData.id
+                                                          .toString(),
+                                                      widget.courseData
+                                                              .overview_url ??
+                                                          "");
+                                                } else {
+                                                  components.displayToast(
+                                                      context, "انتظر من فضلك");
+                                                }
+                                              }
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  "تحميل الفيديو البرومو",
+                                                  textAlign: TextAlign.right,
+                                                  style:
+                                                      AppTextStyles.textStyle(
+                                                          15,
+                                                          AppColors.YELLOW_DARK,
+                                                          FontWeight.w700,
+                                                          null,
+                                                          2),
+                                                ),
+                                                SizedBox(
+                                                  width: 1 *
+                                                      SizeConfig
+                                                          .widthMultiplier,
+                                                ),
+                                                Icon(
+                                                  Icons.download_rounded,
+                                                  color: AppColors.YELLOW_DARK,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      : Center(),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    tileColor: AppColors.BLUE_DARK,
+                                    title: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                "${this.courseData.total_enroll ?? ""}",
+                                                textAlign: TextAlign.right,
+                                                style: AppTextStyles.textStyle(
+                                                    14,
+                                                    Colors.white,
+                                                    FontWeight.w600),
+                                              ),
+                                              SizedBox(
+                                                width: 4 *
+                                                    SizeConfig.widthMultiplier,
+                                              ),
+                                              Text(
+                                                ":عدد الطلبة المشتركين",
+                                                textAlign: TextAlign.right,
+                                                style: AppTextStyles.textStyle(
+                                                    14,
+                                                    Colors.white,
+                                                    FontWeight.w600),
+                                              ),
+                                            ]),
+                                        Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                "${this.courseData.language ?? ""}",
+                                                textAlign: TextAlign.right,
+                                                style: AppTextStyles.textStyle(
+                                                    14,
+                                                    Colors.white,
+                                                    FontWeight.w600),
+                                              ),
+                                              SizedBox(
+                                                width: 6 *
+                                                    SizeConfig.widthMultiplier,
+                                              ),
+                                              Text(
+                                                ":لغة الكورس هى",
+                                                textAlign: TextAlign.right,
+                                                style: AppTextStyles.textStyle(
+                                                    14,
+                                                    Colors.white,
+                                                    FontWeight.w600),
+                                              ),
+                                            ]),
+                                      ],
+                                    ),
+                                  ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    title: Text(
+                                      "تصنيف الكورس",
                                       textAlign: TextAlign.right,
                                       style: AppTextStyles.textStyle(
-                                          14, Colors.white, FontWeight.w600),
+                                          14, Colors.white, FontWeight.bold),
                                     ),
-                                    SizedBox(
-                                      width: 4 * SizeConfig.widthMultiplier,
-                                    ),
-                                    Text(
-                                      ":عدد الطلبة المشتركين",
+                                    subtitle: Text(
+                                      "${this.courseData.category.name ?? ""}",
                                       textAlign: TextAlign.right,
                                       style: AppTextStyles.textStyle(
-                                          14, Colors.white, FontWeight.w600),
+                                          14, Colors.white, FontWeight.normal),
                                     ),
-                                  ]),
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      "${this.courseData.language ?? ""}",
+                                  ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    title: Text(
+                                      "نبذة قصيرة",
                                       textAlign: TextAlign.right,
                                       style: AppTextStyles.textStyle(
-                                          14, Colors.white, FontWeight.w600),
+                                          14, Colors.white, FontWeight.bold),
                                     ),
-                                    SizedBox(
-                                      width: 6 * SizeConfig.widthMultiplier,
-                                    ),
-                                    Text(
-                                      ":لغة الكورس هى",
+                                    subtitle: components.getHtmContent(
+                                        this.courseData.short_description),
+                                  ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    title: Text(
+                                      "تفاصيل أكثر عن الكورس",
                                       textAlign: TextAlign.right,
                                       style: AppTextStyles.textStyle(
-                                          14, Colors.white, FontWeight.w600),
+                                          14, Colors.white, FontWeight.bold),
                                     ),
-                                  ]),
-                            ],
-                          ),
-                        ),
-                        ListTile(
-                          contentPadding: padding,
-                          title: Text(
-                            "تصنيف الكورس",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            "${this.courseData.category.name ?? ""}",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.normal),
-                          ),
-                        ),
-                        ListTile(
-                          contentPadding: padding,
-                          title: Text(
-                            "نبذة قصيرة",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.bold),
-                          ),
-                          subtitle: components
-                              .getHtmContent(this.courseData.short_description),
-                        ),
-                        ListTile(
-                          contentPadding: padding,
-                          title: Text(
-                            "تفاصيل أكثر عن الكورس",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.bold),
-                          ),
-                          subtitle: components
-                              .getHtmContent(this.courseData.big_description),
-                        ),
-                        ListTile(
-                          contentPadding: padding,
-                          title: Text(
-                            "متطلبات الكورس",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.bold, null, 2),
-                          ),
-                          subtitle: Text(
-                            "${appUtils.getStringListString(this.courseData.requirement ?? "")}",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.normal),
-                          ),
-                        ),
-                        ListTile(
-                          contentPadding: padding,
-                          title: Text(
-                            "الإستفادة من الكورس",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.bold, null, 2),
-                          ),
-                          subtitle: Text(
-                            "${appUtils.getStringListString(this.courseData.outcome ?? "")}",
-                            textAlign: TextAlign.right,
-                            style: AppTextStyles.textStyle(
-                                14, Colors.white, FontWeight.normal),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 2 * SizeConfig.heightMultiplier,
-                        ),
-                        (null != this.courseData.classes &&
-                                this.courseData.classes.isNotEmpty)
-                            ? classesBlock(this.courseData.classes)
-                            : Center(),
-                        ListTile(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
-                          contentPadding: padding,
-                          tileColor: Colors.white,
-                          title: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                AppAssets.IC_ARROW_RIGHT,
-                                color: Colors.black,
-                                width: 2 * SizeConfig.heightMultiplier,
-                                height: 2 * SizeConfig.heightMultiplier,
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                " رؤية المزيد من الفيديوهات",
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.textStyle(
-                                    14, Colors.black, FontWeight.bold),
-                              )
-                            ],
-                          ),
-                        ),
-                      ]),
-                    )),
-            // (download.downloading)
-            //     ? Positioned(
-            //         top: 0,
-            //         bottom: 0,
-            //         right: 0,
-            //         left: 0,
-            //         child: Container(
-            //           color: Colors.black45,
-            //           child: Center(
-            //             child: Column(
-            //               mainAxisAlignment: MainAxisAlignment.center,
-            //               children: <Widget>[
-            //                 CircularProgressIndicator(),
-            //                 SizedBox(
-            //                   height: 20.0,
-            //                 ),
-            //                 Container(
-            //                   padding: AppStyles.paddingSymmetric(6, 2),
-            //                   decoration: AppStyles.decorationRoundedColored(
-            //                       AppColors.GRAY_LIGHT, 24),
-            //                   child: Text(
-            //                     " ${download.progressString}  جارى تحميل الفيديو ",
-            //                     style: AppTextStyles.textStyle(
-            //                         14, Colors.orange, FontWeight.bold),
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //           ),
-            //         ),
-            //       )
-            //     : Center()
-          ],
-        ),
+                                    subtitle: components.getHtmContent(
+                                        this.courseData.big_description),
+                                  ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    title: Text(
+                                      "متطلبات الكورس",
+                                      textAlign: TextAlign.right,
+                                      style: AppTextStyles.textStyle(
+                                          14,
+                                          Colors.white,
+                                          FontWeight.bold,
+                                          null,
+                                          2),
+                                    ),
+                                    subtitle: Text(
+                                      "${appUtils.getStringListString(this.courseData.requirement ?? "")}",
+                                      textAlign: TextAlign.right,
+                                      style: AppTextStyles.textStyle(
+                                          14, Colors.white, FontWeight.normal),
+                                    ),
+                                  ),
+                                  ListTile(
+                                    contentPadding: padding,
+                                    title: Text(
+                                      "الإستفادة من الكورس",
+                                      textAlign: TextAlign.right,
+                                      style: AppTextStyles.textStyle(
+                                          14,
+                                          Colors.white,
+                                          FontWeight.bold,
+                                          null,
+                                          2),
+                                    ),
+                                    subtitle: Text(
+                                      "${appUtils.getStringListString(this.courseData.outcome ?? "")}",
+                                      textAlign: TextAlign.right,
+                                      style: AppTextStyles.textStyle(
+                                          14, Colors.white, FontWeight.normal),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 2 * SizeConfig.heightMultiplier,
+                                  ),
+                                  (null != this.courseData.classes &&
+                                          this.courseData.classes.isNotEmpty)
+                                      ? classesBlock(this.courseData.classes)
+                                      : Center(),
+                                  ListTile(
+                                    onTap: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    contentPadding: padding,
+                                    tileColor: Colors.white,
+                                    title: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          AppAssets.IC_ARROW_RIGHT,
+                                          color: Colors.black,
+                                          width:
+                                              2 * SizeConfig.heightMultiplier,
+                                          height:
+                                              2 * SizeConfig.heightMultiplier,
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          " رؤية المزيد من الفيديوهات",
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.textStyle(14,
+                                              Colors.black, FontWeight.bold),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ]),
+                          )),
+                  // (download.downloading)
+                  //     ? Positioned(
+                  //         top: 0,
+                  //         bottom: 0,
+                  //         right: 0,
+                  //         left: 0,
+                  //         child: Container(
+                  //           color: Colors.black45,
+                  //           child: Center(
+                  //             child: Column(
+                  //               mainAxisAlignment: MainAxisAlignment.center,
+                  //               children: <Widget>[
+                  //                 CircularProgressIndicator(),
+                  //                 SizedBox(
+                  //                   height: 20.0,
+                  //                 ),
+                  //                 Container(
+                  //                   padding: AppStyles.paddingSymmetric(6, 2),
+                  //                   decoration: AppStyles.decorationRoundedColored(
+                  //                       AppColors.GRAY_LIGHT, 24),
+                  //                   child: Text(
+                  //                     " ${download.progressString}  جارى تحميل الفيديو ",
+                  //                     style: AppTextStyles.textStyle(
+                  //                         14, Colors.orange, FontWeight.bold),
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       )
+                  //     : Center()
+                ],
+              );
+            }),
       ).isDrag(
         (controller.showPopUp)
             ? Material(
@@ -557,7 +627,6 @@ class ScreenState extends State<CoursePreviewScreen> {
           children: quizes
               .map((e) => InkWell(
                     onTap: () {
-                      print("object mmmmmmmm");
                       AppUtils.checkConnectivity().then((isConnected) {
                         if (isConnected) {
                           Navigator.of(context).push(MaterialPageRoute(

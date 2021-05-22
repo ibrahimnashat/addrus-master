@@ -4,6 +4,7 @@ import 'package:adrus/ui/bloc/bloc_login_social.dart';
 import 'package:adrus/ui/screens/opening_screen.dart';
 import 'package:adrus/utils/helpers/app_constants.dart';
 import 'package:adrus/widgets/components.dart';
+import 'package:fcm_config/fcm_config.dart';
 import 'package:flutter/material.dart';
 import 'package:adrus/di/injection_container.dart' as di;
 import 'package:flutter_phoenix/flutter_phoenix.dart';
@@ -23,7 +24,14 @@ import 'widgets/splah_bkg_widget.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+  await FCMConfig()
+      .init(onBackgroundMessage: _firebaseMessagingBackgroundHandler);
+
   runApp(ProviderScope(child: Phoenix(child: MyApp())));
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Handling a background message: ${message.messageId}");
 }
 
 class MyApp extends StatelessWidget {

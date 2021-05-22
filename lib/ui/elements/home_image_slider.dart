@@ -10,6 +10,7 @@ import 'package:adrus/utils/size_config.dart';
 import 'package:adrus/widgets/loading_indicator.dart';
 import 'package:adrus/widgets/my_error.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_offline/flutter_offline.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:adrus/main.dart';
 import 'full_width_slider.dart';
@@ -28,7 +29,7 @@ class HomeImageSlider extends StatefulWidget {
 class _HomeImageSliderState extends State<HomeImageSlider> {
   final SliderBloc _sliderBloc = sl<SliderBloc>();
   SessionManager sessionManager = sl<SessionManager>();
-
+  bool hasCach = false;
   @override
   void initState() {
     _sliderBloc.getSlider();
@@ -43,52 +44,72 @@ class _HomeImageSliderState extends State<HomeImageSlider> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 30 * SizeConfig.heightMultiplier,
-      color: AppColors.GRAY_LIGHT,
-      child: StreamBuilder<Result<SliderResponse>>(
-          stream: _sliderBloc.mainStream,
-          builder: (_, snapshot) {
-            if (snapshot.hasData) {
-              Result<SliderResponse> result = snapshot.data;
-              if (result is SuccessResult) {
-                if (result.getSuccessData().data.sliders.isNotEmpty) {
-                  return FullWidthSlider(
-                    sliderDataList: result.getSuccessData().data.sliders,
-                    imagesList: [],
-                    sliderHeight: 33,
-                  );
-                } else {
-                  return MyError(Message.NO_CONTENT);
-                }
-              } else if (result is ErrorResult) {
-                StatusResponse error = StatusResponse.decodedJson(
-                    result.getErrorMessage().replaceAll("Exception:", ""));
-                if (error.status == 401) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    sessionManager.deleteUser();
-                    Phoenix.rebirth(context);
-                  });
-                  return Center();
-                } else {
-                  if (result.getErrorMessage().contains("101")) {
-                    //offline
-                    return MyError("offline");
+    return OfflineBuilder(
+        builder: (context) => SizedBox(),
+        connectivityBuilder: (BuildContext context,
+            ConnectivityResult connectivity, Widget child) {
+          final bool connected = connectivity != ConnectivityResult.none;
+
+          if (!connected && hasCach == false) {
+            return Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Center(
+                child: Text(
+                  "برجاء الاتصال بالانترنت",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            );
+          }
+          hasCach = true;
+          return Container(
+            height: 30 * SizeConfig.heightMultiplier,
+            color: AppColors.GRAY_LIGHT,
+            child: StreamBuilder<Result<SliderResponse>>(
+                stream: _sliderBloc.mainStream,
+                builder: (_, snapshot) {
+                  if (snapshot.hasData) {
+                    Result<SliderResponse> result = snapshot.data;
+                    if (result is SuccessResult) {
+                      if (result.getSuccessData().data.sliders.isNotEmpty) {
+                        return FullWidthSlider(
+                          sliderDataList: result.getSuccessData().data.sliders,
+                          imagesList: [],
+                          sliderHeight: 33,
+                        );
+                      } else {
+                        return MyError(Message.NO_CONTENT);
+                      }
+                    } else if (result is ErrorResult) {
+                      StatusResponse error = StatusResponse.decodedJson(result
+                          .getErrorMessage()
+                          .replaceAll("Exception:", ""));
+                      if (error.status == 401) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          sessionManager.deleteUser();
+                          Phoenix.rebirth(context);
+                        });
+                        return Center();
+                      } else {
+                        if (result.getErrorMessage().contains("101")) {
+                          //offline
+                          return MyError("offline");
+                        } else {
+                          return MyError(result.getErrorMessage());
+                        }
+                      }
+                    } else {
+                      return LoadingIndicator(
+                        indicatorSize: 3,
+                      );
+                    }
                   } else {
-                    return MyError(result.getErrorMessage());
+                    return LoadingIndicator(
+                      indicatorSize: 3,
+                    );
                   }
-                }
-              } else {
-                return LoadingIndicator(
-                  indicatorSize: 3,
-                );
-              }
-            } else {
-              return LoadingIndicator(
-                indicatorSize: 3,
-              );
-            }
-          }),
-    );
+                }),
+          );
+        });
   }
 }

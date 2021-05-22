@@ -15,9 +15,11 @@ class UserRepo {
   final ApiUtils apiUtils;
   UserRepo(this.client, this.apiUtils);
 
-  Future<LoginResponse> handleLogin(String email, String password) async {
+  Future<LoginResponse> handleLogin(
+      String email, String password, String token) async {
     final url = Urls.LOGIN;
-    var body = LoginBody.getBaseBodyJson(email: email, password: password);
+    var body = LoginBody.getBaseBodyJson(
+        email: email, password: password, token: token);
     debugPrint("$url headers = ${apiUtils.headers.toString()}\nbody = $body");
     final response = await client.post(Uri.parse(url),
         body: body, headers: apiUtils.headers);
