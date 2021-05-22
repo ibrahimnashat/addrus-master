@@ -60,7 +60,7 @@ class ScreenState extends State<SplashBackgroudWidget> {
               left: 0,
               child: Center(
                 child: Text(
-                    "All rights reserved © Addrus E-Learning\nPowered by Shetewy-Tech Türkiye",
+                    "All rights reserved © Addrus E-Learning",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,

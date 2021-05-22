@@ -222,21 +222,21 @@ class ScreenState extends State<MyDrawer> {
       case 2:
         {
           //home
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
+          Navigator.of(context).push(MaterialPageRoute(
               builder: (BuildContext context) => HomeScreen()));
           break;
         }
       case 3:
         {
           //profile
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
+          Navigator.of(context).push(MaterialPageRoute(
               builder: (BuildContext context) => ProfileScreen()));
           break;
         }
       case 4:
         {
           //my courses
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
+          Navigator.of(context).push(MaterialPageRoute(
               builder: (BuildContext context) => CoursesScreen(
                     title: 'دروسي',
                     icon: AppAssets.IC_MY_COURSES,
@@ -248,7 +248,7 @@ class ScreenState extends State<MyDrawer> {
       case 5:
         {
           //offline courses
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
+          Navigator.of(context).push(MaterialPageRoute(
               builder: (BuildContext context) => CoursesScreen(
                     title: 'الكورسات المحملة',
                     icon: AppAssets.IC_OFFLINE_COURSES,

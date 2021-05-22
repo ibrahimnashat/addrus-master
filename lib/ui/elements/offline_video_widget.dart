@@ -4,6 +4,7 @@ import 'package:adrus/ui/elements/player_item.dart';
 import 'package:adrus/ui/riverpod/video_player_controller.dart';
 import 'package:adrus/utils/app_utils.dart';
 import 'package:adrus/utils/helpers/app_colors.dart';
+import 'package:adrus/utils/helpers/app_constants.dart';
 import 'package:adrus/utils/helpers/text_styles.dart';
 import 'package:adrus/utils/size_config.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class ScreenState extends State<OfflineVideoWidget> {
   AutoDisposeChangeNotifierProvider<VideoPLayerController>
       videoPlayerController;
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     appUtils
         .isVideoDownloaded(widget.videoId, widget.videoUrl)
         .then((isDownloaded) {
@@ -51,9 +52,11 @@ class ScreenState extends State<OfflineVideoWidget> {
               appUtils.getVideoName(widget.videoId, widget.videoUrl);
 
           path = "$localPath$videoName";
-          if (widget.isPromo)
+
+          if (widget.isPromo) {
             videoPlayerController = AutoDisposeChangeNotifierProvider(
-                (ref) => VideoPLayerController(path));
+                (ref) => VideoPLayerController());
+          }
         });
       } else {
         setState(() {
@@ -64,6 +67,12 @@ class ScreenState extends State<OfflineVideoWidget> {
         checkFinished = true;
       });
     });
+    super.initState();
+  }
+
+  bool show = false;
+  @override
+  Widget build(BuildContext context) {
     if (path == null) return SizedBox(height: 0);
     return Container(
         color: Colors.black,
@@ -75,8 +84,19 @@ class ScreenState extends State<OfflineVideoWidget> {
                 ? videoPlayerController != null
                     ? Consumer(builder: (context, watch, child) {
                         final controller = watch(videoPlayerController);
-                        return PlayerItem(
-                          controller: controller.controller,
+                        if (show)
+                          return PlayerItem(
+                            controller: controller.controller,
+                          );
+                        return OnlineCourseItem(
+                          hideTitle: true,
+                          videoUrl: widget.videoUrl,
+                          onTap: (url) {
+                            setState(() {
+                              show = true;
+                            });
+                            controller.play(path);
+                          },
                         );
                       })
                     : OnlineCourseItem(

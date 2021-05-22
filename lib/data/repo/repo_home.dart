@@ -23,6 +23,7 @@ class HomeRepo {
     print("$url headers = ${apiUtils.headers.toString()}");
     final response =
         await client.get(Uri.parse(url), headers: apiUtils.headers);
+    print(response);
     print('request.url:: ${response.statusCode} - ${response.request.url}');
     print('response.body:: ${response.body.toString()}');
     if (response.statusCode == 200) {
