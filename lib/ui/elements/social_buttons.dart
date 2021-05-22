@@ -238,8 +238,9 @@ class _ScreenState extends State<SocialButtons> {
     }
   }
 
-  handleGoogleLogin() {
-    _googleSignIn.signIn().then((result) {
+  handleGoogleLogin() async {
+    await _googleSignIn.signIn().then((result) {
+      print(result.photoUrl);
       result.authentication.then((googleKey) {
         print("accessToken:: ${googleKey.accessToken}");
         print("idToken:: ${googleKey.idToken}");

@@ -2,7 +2,6 @@ import 'package:adrus/data/repo/repo_home.dart';
 import 'package:adrus/data/repo/repo_user.dart';
 import 'package:adrus/ui/bloc/bloc_add_favorite.dart';
 import 'package:adrus/ui/bloc/bloc_answer_question.dart';
-import 'package:adrus/ui/bloc/bloc_categories.dart';
 import 'package:adrus/ui/bloc/bloc_edit_profile.dart';
 import 'package:adrus/ui/bloc/bloc_forget_password.dart';
 import 'package:adrus/ui/bloc/bloc_login.dart';
