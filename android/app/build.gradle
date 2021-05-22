@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
+apply plugin: 'com.google.gms.google-services'
 
 android {
     // signingConfigs {
@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.org.adrus"
+        applicationId "com.app.adrus"
         minSdkVersion 16
         targetSdkVersion 30
         versionCode 3 //flutterVersionCode.toInteger()
@@ -81,4 +81,3 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:18.0.0'
     implementation 'com.facebook.android:facebook-android-sdk:[5,6)'
 }
-apply plugin: 'com.google.gms.google-services'

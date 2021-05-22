@@ -230,8 +230,7 @@ class ScreenState extends State<LoginScreen> {
                         height: 3 * SizeConfig.heightMultiplier,
                       ),
                       SocialButtons(),
-                      Text(
-                          "All rights reserved © Addrus E-Learning\nPowered by Shetewy-Tech Türkiye",
+                      Text("All rights reserved © Addrus E-Learning",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
