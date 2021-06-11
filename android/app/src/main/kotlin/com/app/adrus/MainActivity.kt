@@ -1,4 +1,4 @@
-package com.app.adrus
+package com.application.adrus
 
 import android.os.Bundle
 import android.view.WindowManager

@@ -21,26 +21,27 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0.2'
 }
 
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    // signingConfigs {
-    //     release {
-    //         storeFile file('/Users/DoaaAlkasaby/Desktop/Work_Flutter/AdrusFolder/adrus/KeyStoreFolder/key_store')
-    //         storePassword 'adrus123'
-    //         keyAlias 'key_alias'
-    //         keyPassword 'adrus123'
-    //     }
-    //     debug {
-    //         storeFile file('/Users/DoaaAlkasaby/Desktop/Work_Flutter/AdrusFolder/adrus/KeyStoreFolder/key_store')
-    //         storePassword 'adrus123'
-    //         keyPassword 'adrus123'
-    //         keyAlias 'key_alias'
-    //     }
-    // }
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']   
+        }
+    }
     compileSdkVersion 30
 
     sourceSets {
@@ -53,19 +54,18 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.app.adrus"
+        applicationId "com.application.adrus"
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 3 //flutterVersionCode.toInteger()
-        versionName "2.0.1" //flutterVersionName
         multiDexEnabled true
-       // signingConfig signingConfigs.release
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        signingConfig signingConfigs.release
     }
 
-    buildTypes {
+     buildTypes {
         release {
-            signingConfig signingConfigs.debug
-          //  minifyEnabled false
+            signingConfig signingConfigs.release
         }
     }
 }
