@@ -54,7 +54,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.application.adrus"
+        applicationId "com.learning.adrus"
         minSdkVersion 16
         targetSdkVersion 30
         multiDexEnabled true

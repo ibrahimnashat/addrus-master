@@ -20,13 +20,15 @@ class ScreenState extends State<SplashBackgroudWidget> {
   @override
   void initState() {
     super.initState();
-    AssetsAudioPlayer.newPlayer()
-        .open(
-          Audio("assets/titireretiti.mp3"),
-          autoStart: true,
-          showNotification: false,
-        )
-        .then((value) => null);
+    try {
+      AssetsAudioPlayer.newPlayer()
+          .open(
+            Audio("assets/titireretiti.mp3"),
+            autoStart: true,
+            showNotification: false,
+          )
+          .then((value) => null);
+    } catch (e) {}
   }
 
   @override
@@ -59,8 +61,7 @@ class ScreenState extends State<SplashBackgroudWidget> {
               right: 0,
               left: 0,
               child: Center(
-                child: Text(
-                    "All rights reserved © Addrus E-Learning",
+                child: Text("All rights reserved © Addrus E-Learning",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,

@@ -7,25 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:252601283692:android:c2e2f9b6a0b75faacfd449",
+        "mobilesdk_app_id": "1:252601283692:android:64187c5a71ef1ed5cfd449",
         "android_client_info": {
-          "package_name": "com.application.adrus"
+          "package_name": "com.learning.adrus"
         }
       },
       "oauth_client": [
         {
-          "client_id": "252601283692-u4denffu105drv9vdpddfeqi3cbslnvt.apps.googleusercontent.com",
+          "client_id": "252601283692-hmeg8q213lucvct9bv6p2a725snk9s44.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.application.adrus",
-            "certificate_hash": "86d163ecddcc0b2d9dec37606efacd988b8ae526"
-          }
-        },
-        {
-          "client_id": "252601283692-ugcnco0cgt8vequ0aj48mostiutklj7d.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.application.adrus",
+            "package_name": "com.learning.adrus",
             "certificate_hash": "c62544ffb08b73f781f9243a40960e279a9e48a4"
           }
         },
